@@ -1,10 +1,7 @@
-use std::io::{self, Write};
-
-use owo_colors::OwoColorize;
-
-use islam::salah::PrayerTimes;
-
 use crate::DateTime;
+use islam::salah::{Prayer, PrayerTimes};
+use owo_colors::OwoColorize;
+use std::io::{self, Write};
 
 #[derive(Debug)]
 pub struct Printer {
@@ -21,6 +18,22 @@ impl Printer {
             json_format,
         }
     }
+
+    fn name(prayer: Prayer) -> String {
+        match prayer {
+            Prayer::Fajr | Prayer::FajrTomorrow => "Fajr".to_owned(),
+            Prayer::Sherook => "Shurook".to_owned(),
+            Prayer::Dohr => "Dhuhr".to_owned(),
+            Prayer::Asr => "Asr".to_owned(),
+            Prayer::Maghreb => "Maghrib".to_owned(),
+            Prayer::Ishaa => "Ishaa".to_owned(),
+        }
+    }
+
+    fn print(prayer_fmt: &str) {
+        writeln!(io::stdout(), "{}", prayer_fmt).ok();
+    }
+
     /// Show all prayers info.
     pub fn all(&self) -> Result<(), crate::Error> {
         let prayers = self.prayers;
@@ -29,12 +42,12 @@ impl Printer {
             Ok(format!("{}: {}", name, time.format("%H:%M")))
         };
 
-        Self::print(&fmt_output("Fajr", prayers.fajr)?);
-        Self::print(&fmt_output("Sherook", prayers.sherook)?);
-        Self::print(&fmt_output("Dohr", prayers.dohr)?);
-        Self::print(&fmt_output("Asr", prayers.asr)?);
-        Self::print(&fmt_output("Mghreb", prayers.maghreb)?);
-        Self::print(&fmt_output("Ishaa", prayers.ishaa)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Fajr), prayers.fajr)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Sherook), prayers.sherook)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Dohr), prayers.dohr)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Asr), prayers.asr)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Maghreb), prayers.maghreb)?);
+        Self::print(&fmt_output(&Self::name(Prayer::Ishaa), prayers.ishaa)?);
         Self::print(&fmt_output(
             "Fist third of night",
             prayers.first_third_of_night,
@@ -55,14 +68,14 @@ impl Printer {
 
         let remaining_fmt = {
             if hour == 0 {
-                format!("({} minutes left)", minute)
+                format!("({:0>2} minutes left)", minute)
             } else {
-                format!("({}:{} hours left)", hour, minute)
+                format!("({:0>2}:{:0>2} hours left)", hour, minute)
             }
         };
 
         // default
-        let mut prayer_fmt = format!("{} {}", prayer.name()?, remaining_fmt);
+        let mut prayer_fmt = format!("{} {}", Self::name(prayer), remaining_fmt);
         let state = {
             if hour == 0 && minute < 30 {
                 "Critical"
@@ -85,15 +98,16 @@ impl Printer {
         Self::print(&prayer_fmt);
         Ok(())
     }
+
     /// Show next prayer info
     pub fn next(&self) -> Result<(), crate::Error> {
         let prayers = self.prayers;
         let prayer = prayers.next();
         let time = prayers.time(prayer);
-        let time = time.format("%H:%M").to_string();
+        let time = time.format("%I:%M %p").to_string();
 
         // default
-        let mut prayer_fmt = format!("{} ({})", prayer.name()?, time);
+        let mut prayer_fmt = format!("{} ({})", Self::name(prayer), time);
 
         // JSON
         let state = "Info";
@@ -112,12 +126,8 @@ impl Printer {
         let prayer = prayers.next();
         let (hour, minute) = prayers.time_remaining();
 
-        let prayer_fmt = format!("{} in {}:{}", prayer.name()?, hour, minute);
+        let prayer_fmt = format!("{} in {:0>2}:{:0>2}", Self::name(prayer), hour, minute);
         Self::print(&prayer_fmt);
         Ok(())
-    }
-
-    fn print(prayer_fmt: &str) {
-        writeln!(io::stdout(), "{}", prayer_fmt).ok();
     }
 }

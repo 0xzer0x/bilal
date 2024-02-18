@@ -1,10 +1,8 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-
+use crate::error::Error;
 use miette::{NamedSource, Result, SourceOffset};
 use serde::Deserialize;
-
-use crate::error::Error;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
