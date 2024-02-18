@@ -106,6 +106,17 @@ impl Printer {
         Self::print(&prayer_fmt);
         Ok(())
     }
+
+    pub fn next_remaining(&self) -> Result<(), crate::Error> {
+        let prayers = &self.prayers;
+        let prayer = prayers.next();
+        let (hour, minute) = prayers.time_remaining();
+
+        let prayer_fmt = format!("{} in {}:{}", prayer.name()?, hour, minute);
+        Self::print(&prayer_fmt);
+        Ok(())
+    }
+
     fn print(prayer_fmt: &str) {
         writeln!(io::stdout(), "{}", prayer_fmt).ok();
     }

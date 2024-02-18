@@ -31,6 +31,7 @@ pub enum Mode {
     All,
     Next,
     Current,
+    Remaining,
 }
 
 #[derive(Clone, ValueEnum)]
